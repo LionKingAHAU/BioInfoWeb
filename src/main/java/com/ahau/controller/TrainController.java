@@ -1,6 +1,5 @@
 package com.ahau.controller;
 
-import com.ahau.common.Code;
 import com.ahau.common.Result;
 import com.ahau.domain.assemble.DraftParam;
 import com.ahau.domain.centro.CentroParam;
@@ -34,17 +33,9 @@ public class TrainController {
         String catalogue = "Assemble/";
         Vector<String> trainResult = trainService.trainAssemble(request, draftParam, catalogue);
         // 2. 把生成的结果存储在Session中 该部分会检验每一个打印语句
-        Boolean err = trainService.assembleSetSession(request, trainResult);
-        System.out.println("------> 是否发生err: ");
-        if (!err) {
-            System.out.println("发生错误");
-            return new Result(Code.TRAIN_ERR, "wrong");
-        } else {
-            System.out.println("没有错误");
-            // 3. 发邮件给用户
-            trainService.sendEmail(request);
-            return new Result(Code.TRAIN_OK, "success", null);
-        }
+        Boolean err = trainService.assembleSetSession(request, trainResult, catalogue);
+        // 3. 发邮件给用户
+        return trainService.sendEmail(request, err, catalogue);
     }
 
 
@@ -61,17 +52,9 @@ public class TrainController {
         String catalogue = "GapFill/";
         Vector<String> trainResult = trainService.trainGapFill(request, gapParam, catalogue);
         // 2. 把生成的结果存储在Session中 该部分会检验每一个打印语句
-        Boolean err = trainService.fillSetSession(request, trainResult);
-        System.out.println("------> 是否发生err: ");
-        if (!err) {
-            System.out.println("发生错误");
-            return new Result(Code.TRAIN_ERR, "Unexpected error occurred", null);
-        } else {
-            System.out.println("没有错误");
-            // 3. 发邮件给用户
-            trainService.sendEmail(request);
-            return new Result(Code.TRAIN_OK, "success", null);
-        }
+        Boolean err = trainService.fillSetSession(request, trainResult, catalogue);
+        // 3. 发邮件给用户
+        return trainService.sendEmail(request, err, catalogue);
     }
 
 
@@ -88,17 +71,9 @@ public class TrainController {
         String catalogue = "Telo/";
         Vector<String> trainResult = trainService.trainTelo(request, teloParam, catalogue);
         // 2. 把生成的结果存储在Session中 该部分会检验每一个打印语句
-        Boolean err = trainService.teloSetSession(request, trainResult);
-        System.out.println("------> 是否发生err: ");
-        if(!err){
-            System.out.println("发生错误");
-            return new Result(Code.TRAIN_ERR, "Unexpected error occurred", err);
-        }else {
-            System.out.println("没有错误");
-            // 3. 发邮件给用户
-            trainService.sendEmail(request);
-            return new Result(Code.TRAIN_OK, "success", err);
-        }
+        Boolean err = trainService.teloSetSession(request, trainResult, catalogue);
+        // 3. 发邮件给用户
+        return trainService.sendEmail(request, err, catalogue);
     }
 
 
@@ -115,16 +90,8 @@ public class TrainController {
         String catalogue = "Centro/";
         Vector<String> trainResult = trainService.trainCentro(request, centroParam, catalogue);
         // 2. 把生成的结果存储在Session中 该部分会检验每一个打印语句
-        Boolean err = trainService.centroSetSession(request, trainResult);
-        System.out.println("------> 是否发生err: ");
-        if (!err) {
-            System.out.println("发生错误");
-            return new Result(Code.TRAIN_ERR, "Unexpected error occurred", null);
-        } else {
-            System.out.println("没有错误");
-            // 3. 发邮件给用户
-            trainService.sendEmail(request);
-            return new Result(Code.TRAIN_OK, "success", null);
-        }
+        Boolean err = trainService.centroSetSession(request, trainResult, catalogue);
+        // 3. 发邮件给用户
+        return trainService.sendEmail(request, err, catalogue);
     }
 }

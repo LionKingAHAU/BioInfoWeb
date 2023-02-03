@@ -2,7 +2,9 @@ package com.ahau.service.impl;
 
 
 import com.ahau.common.Code;
+import com.ahau.common.Result;
 import com.ahau.domain.FilenamePair;
+import com.ahau.domain.ProcessError;
 import com.ahau.domain.assemble.DraftParam;
 import com.ahau.domain.ProcessWarning;
 import com.ahau.domain.centro.CentroParam;
@@ -72,17 +74,53 @@ public class TrainService {
 
     /**
      * @Description: 发送邮件
-     * @Param: request
-     * @Return: void
+     * @Param: HttpServletRequest
+     * @Param: Boolean err (是否发生错误）
+     * @Param: String catalogue 训练类型
+     * @Return: Result
      */
-    public void sendEmail(HttpServletRequest request) {
+    public Result sendEmail(HttpServletRequest request, Boolean err, String catalogue) {
         System.out.println("---> trainService: sendEmail");
         // 1. 获取taskID 和 email
         HttpSession session = request.getSession();
-        String taskID = (String) session.getAttribute("TaskID");
         String mail = (String) session.getAttribute("Email");
         System.out.println("------> 用户的邮箱：" + mail);
-        // 2. 发邮件
+        System.out.println("------> 是否发生err: ");
+        // 返回的Result
+        Result result = new Result(Code.TRAIN_OK, "success", null);
+        // 2. 判断是否发生了错误
+        StringBuilder content;
+        if (err) { // 没有发生错误
+            System.out.println("没有错误");
+            // 获取查询ID
+            String taskID = (String) session.getAttribute("TaskID");
+            taskID = taskID.replace("/", "_");
+            taskID = taskID.substring(0, taskID.length() - 1);
+            System.out.println("---》 任务序列号：" + taskID);
+            // 邮件内容
+            content = new StringBuilder("# Your Query ID was:" + taskID + "\n" +
+                    "# Please find your search results below." + "\n" +
+                    "# If you have any comments or questions about this service," + "\n" +
+                    "# please contact us at:  yuejy@ahau.edu.cn " + "\n" +
+                    "# ----------------------------------------------" + "\n" +
+                    "# You can search the full results by click:" + "\n" +
+                    "# https://www.atcgn.com:8080/blast/pages/home.html");
+            // 返回的Result
+        } else { // 发生了错误
+            System.out.println("发生错误");
+            // 获取Errors
+            String paramType = catalogue + "Errors";
+            Vector<ProcessError> processErrors = (Vector<ProcessError>) session.getAttribute(paramType);
+            content = new StringBuilder("# There are some errors occurred during the process:" + "\n");
+            for (ProcessError pr : processErrors) {
+                content.append("# ").append(pr.getError()).append("\n");
+            }
+            content.append("# You can have another try by click https://www.atcgn.com:8080/blast/pages/home.html");
+            // 修改Result状态
+            result.setCode(Code.TRAIN_ERR);
+            result.setMessage("Error occurred!");
+        }
+        // 3. 发邮件
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             // 谁发的
@@ -90,21 +128,13 @@ public class TrainService {
             // 发给谁（这里可以转发多个邮箱 使用setCc）
             message.setTo(mail);
             // 主题
-            message.setSubject("【QuartetProject】 Query your task results ");
+            message.setSubject("【QuartetProject】 Your task results ");
             // 内容+发送时间 TasKID: Telo/uuid/ ---> Telo_uuid /改为_ 去掉后面的/
-            taskID = taskID.replace("/", "_");
-            taskID = taskID.substring(0, taskID.length() - 1);
-            System.out.println("---》 任务序列号：" + taskID);
-            message.setText("# Your Query ID was:" + taskID + "\n" +
-                    "# Please find your search results below." + "\n" +
-                    "# If you have any comments or questions about this service," + "\n" +
-                    "# please contact us at:  yuejy@ahau.edu.cn " + "\n" +
-                    "# ----------------------------------------------" + "\n" +
-                    "# You can search the full results by click:" + "\n" +
-                    "# https://www.atcgn.com:8080/blast/pages/home.html");
+            message.setText(content.toString());
             message.setSentDate(new Date());
             // 发送
             javaMailSender.send(message);
+            return result;
         }
         // 异常写在服务里 向上抛出
         catch (Exception e) {
@@ -169,8 +199,12 @@ public class TrainService {
         HttpSession session = request.getSession();
         // 1 存储Warning信息
         Vector<ProcessWarning> warningInfo = new Vector<>();
+        // 存储Error的信息
+        Vector<ProcessError> errorInfo = new Vector<>();
         // warning count
         int wCount = 0;
+        // error count
+        int eCount = 0;
         for (String str : trainResult) {
             // 2 Warnings 最终需要在页面展示
             if (str.contains("[Warning]")) {
@@ -179,16 +213,29 @@ public class TrainService {
                 pw.setWID(wCount);
                 pw.setWarning(str);
                 warningInfo.add(pw);
-                System.out.println("------>" + str);
+                System.out.println("warning------>\t" + str);
             }
-            // 3 Errors 需要提示用户训练发生未知错误
+            // 3 Errors 需要提示用户训练发生未知错误 Error也是有不同类型的
             if (str.contains("[Error]")) {
-                return false;
+                // 3.1 session要设置一下Error
+                eCount += 1;
+                ProcessError pr = new ProcessError();
+                pr.setEID(eCount);
+                pr.setError(str);
+                errorInfo.add(pr);
+                System.out.println("error------>\t" + str);
             }
         }
         // 4 Warnings是一个String数组的形式设置为Session
-        session.setAttribute(paramType, warningInfo);
-        return true;
+        if (errorInfo.size() > 0) {
+            String errorParam = paramType + "Errors";
+            session.setAttribute(errorParam, errorInfo);
+            return false;
+        } else {
+            String warningParam = paramType + "Warnings";
+            session.setAttribute(warningParam, warningInfo);
+            return true;
+        }
     }
 
 
@@ -250,10 +297,9 @@ public class TrainService {
      * @Param: Vector<String> trainResult
      * @Return: void
      */
-    public Boolean assembleSetSession(HttpServletRequest request, Vector<String> trainResult) {
+    public Boolean assembleSetSession(HttpServletRequest request, Vector<String> trainResult, String catalogue) {
         System.out.println("--->TrainService：setSession\t把训练的结果设置到session中......");
-        String paramType = "assembleWarnings";
-        return setSession(request, paramType, trainResult);
+        return setSession(request, catalogue, trainResult);
     }
 
 
@@ -314,10 +360,9 @@ public class TrainService {
      * @Param: Vector<String> trainResult
      * @Return: Boolean
      */
-    public Boolean fillSetSession(HttpServletRequest request, Vector<String> trainResult) {
+    public Boolean fillSetSession(HttpServletRequest request, Vector<String> trainResult, String catalogue) {
         System.out.println("--->TrainService：fillSetSession 把训练的结果设置到session中......");
-        String paramType = "fillWarnings";
-        return setSession(request, paramType, trainResult);
+        return setSession(request, catalogue, trainResult);
     }
 
 
@@ -365,10 +410,9 @@ public class TrainService {
      * @Param: Vector<String> trainResult
      * @Return: boolean Boolean用于看命令行中是否出现[error]
      */
-    public Boolean teloSetSession(HttpServletRequest request, Vector<String> trainResult) {
+    public Boolean teloSetSession(HttpServletRequest request, Vector<String> trainResult, String catalogue) {
         System.out.println("--->TrainService：teloSetSession 把训练的结果设置到session中......");
-        String paramType = "teloWarnings";
-        return setSession(request, paramType, trainResult);
+        return setSession(request, catalogue, trainResult);
     }
 
 
@@ -439,10 +483,9 @@ public class TrainService {
      * @Param: Vector<String> trainResult
      * @Return: Boolean
      */
-    public Boolean centroSetSession(HttpServletRequest request, Vector<String> trainResult) {
+    public Boolean centroSetSession(HttpServletRequest request, Vector<String> trainResult, String catalogue) {
         System.out.println("--->TrainService：centroSetSession 把训练的结果设置到session中......");
-        String paramType = "centroWarnings";
-        return setSession(request, paramType, trainResult);
+        return setSession(request, catalogue, trainResult);
     }
 }
 

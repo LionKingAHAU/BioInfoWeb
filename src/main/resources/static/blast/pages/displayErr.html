@@ -447,12 +447,32 @@
     <div id="thinner">
         <el-container>
             <el-main>
-                <el-empty description="Ops...Unknown Errors Occurred During the Process!"></el-empty>
+                <el-empty description="Ops...Some Errors Occurred During the Process!">
+                    <template>
+                        <el-table
+                                :data="processErrors"
+                                class="tableSet"
+                                style="
+                                    font-size: 1.1rem;
+                                    font-family: Helvetica,sans-serif;
+                                    margin:10px 10px 10px 10px;"
+                                stripe
+                                border>
+                            <el-table-column
+                                    prop="eid"
+                                    label="ID"
+                                    width="60">
+                            </el-table-column>
+                            <el-table-column
+                                    prop="error"
+                                    label="ERROR"
+                                    width="360">
+                            </el-table-column>
+                        </el-table>
+                    </template>
+                </el-empty>
+
             </el-main>
-
-
-
-
         </el-container>
     </div>
     <!--5 页脚信息-->
@@ -491,7 +511,18 @@
         data: function () {
             return {
                 activeBar: "2", // 导航栏激活的栏，默认为Home 话说下拉栏显示不了啊喂
+                processErrors:[
+                    {'eid':1, 'error':'uncaught errors'},
+                    {'eid':2, 'error':'aaahhhhhhhhhh'},],
             }
+        },
+        /*这里需要mounted读errors*/
+        mounted(){
+            axios.get("/blast/common/errDisplay").then((res) => {
+                console.log(res);
+                this.processErrors = res.data.data;
+                this.$message.error(res.data.message);
+            });
         },
         methods: {
 

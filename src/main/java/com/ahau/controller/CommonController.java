@@ -2,6 +2,7 @@ package com.ahau.controller;
 
 import com.ahau.common.Code;
 import com.ahau.common.Result;
+import com.ahau.domain.ProcessError;
 import com.ahau.domain.assemble.DraftResultUrl;
 import com.ahau.domain.centro.CentroCandidate;
 import com.ahau.domain.centro.CentroResultUrl;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
+import java.util.Vector;
 
 @RestController
 @RequestMapping("/blast/common") // 对应前端的格式
@@ -354,4 +356,23 @@ public class CommonController {
         ArrayList<CentroCandidate> centroCandidates = commonService.centroShowMore(request, fileName);
         return new Result(Code.CENTRO_SEARCH_OK, "success", centroCandidates);
     }
+
+
+    /**
+     * @Description: Err页面展示运行的错误
+     * @Param: HttpServletRequest
+     * @Return: Result
+     */
+    @GetMapping("/errDisplay")
+    public Result errDisplay(HttpServletRequest request) {
+        System.out.println("===》CommonController: errDisplay......");
+        HttpSession session = request.getSession();
+        String taskID = (String) session.getAttribute("TaskID"); // Assemble/uuid/
+        String catalogue = taskID.split("/")[0] + "/";
+        String paramType = catalogue + "Errors";
+        Vector<ProcessError> processErrors = (Vector<ProcessError>) session.getAttribute(paramType);
+        System.out.println(processErrors);
+        return new Result(Code.TRAIN_ERR, "errors", processErrors);
+    }
+
 }

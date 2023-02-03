@@ -1,8 +1,8 @@
 package com.ahau;
 
 import com.ahau.common.Code;
-import com.ahau.domain.DraftMapInfo;
-import com.ahau.domain.DraftStat;
+import com.ahau.domain.assemble.DraftMapInfo;
+import com.ahau.domain.assemble.DraftStat;
 import com.ahau.domain.centro.CentroCandidate;
 import com.ahau.domain.centro.CentroSubCan;
 import com.ahau.domain.gapFill.GapDetail;
@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -264,268 +265,273 @@ class YuanyiDemoApplicationTests {
         }
     }
 
+
+
+
     @Test
-    void teloReadInfo() throws IOException {
-        String infoUrl = "Quartet.telo.info";
-        String transPath = "E:/bioResp/result/epResult/Telo/";
-        ArrayList<TeloInfo> teloInfos = new ArrayList<>();
+    void assembleReadMapInfo() throws IOException {
+        String mapInfoUrl = "E:/bioResp/result/epResult/Draft/contig.mapinfo";
+        Vector<DraftMapInfo> draftMapInfos = new Vector<>();
         BufferedReader reader;
-        infoUrl = transPath + infoUrl;
-        reader = new BufferedReader(new FileReader(infoUrl));
+        reader = new BufferedReader(new FileReader(mapInfoUrl));
         String line = reader.readLine();
         while (line != null) {
             // 1. 过滤掉头部的信息
             if (!line.contains("#")) {
-                TeloInfo teloInfo = new TeloInfo();
+                DraftMapInfo draftMapInfo = new DraftMapInfo();
                 String[] split = line.split("\t");
                 for (int i = 0; i < split.length; i++) {
                     switch (i) {
                         case 0:
-                            teloInfo.setChrID(split[i]);
+                            draftMapInfo.setContigID(split[i]);
                             break;
                         case 1:
-                            teloInfo.setLeftNum(split[i]);
+                            draftMapInfo.setContigLength(split[i]);
                             break;
                         case 2:
-                            teloInfo.setLeftStart(split[i]);
-                            break;
-                        case 3:
-                            teloInfo.setLeftEnd(split[i]);
-                            break;
-                        case 4:
-                            teloInfo.setRightNum(split[i]);
-                            break;
-                        case 5:
-                            teloInfo.setRightStart(split[i]);
-                            break;
-                        case 6:
-                            teloInfo.setRightEnd(split[i]);
+                            draftMapInfo.setTargetID(split[i]);
                             break;
                     }
                 }
-                teloInfos.add(teloInfo);
+                draftMapInfos.add(draftMapInfo);
             }
             line = reader.readLine();
         }
         reader.close();
-        for (TeloInfo teloInfo : teloInfos) {
-            System.out.println(teloInfo);
+        for (DraftMapInfo draftMapInfo : draftMapInfos) {
+            System.out.println(draftMapInfo);
         }
     }
 
     @Test
-    void centroReader() throws IOException {
-        String candidateUrl = "simu.candidate";
-        String transPath = "E:/bioResp/result/epResult/Centro/";
-        ArrayList<CentroCandidate> centroCandidates = new ArrayList<>();
+    void mkdir() {
+        String dir = "E:/bioResp/new task dir/asiajss/upload/1";
+        File file = new File(dir);
+        if (!file.exists()) {
+            file.mkdirs();
+            System.out.println("建立任务上传地址目录：" + file);
+        }
+    }
+
+    @Test
+    void delete() {
+        String taskID = "Assemble/3a2833bc-d07a-4a32-bcb5-0fa4485ed877";
+        String filename = "Genome.fasta";
+        String taskRootPath = "E:/bioResp/new_task_dir/";
+        String uploadDir = "/upload/";
+        String path = taskRootPath + taskID + uploadDir + filename;
+        File file = new File(path);
+        System.out.println(file.delete());
+    }
+
+    @Test
+    void getContent() throws IOException {
+        File f = new File("E:/bioResp/new_task_dir/Assemble/ef30a6e5-0470-42fe-bc1f-270dca107681/upload");
+        // 首先获取该路径下所有目录或文件
+        File[] files = f.listFiles();
+        // 遍历，若是文件，继续getContent，否则输出绝对路径
+        if (files != null) {
+            System.out.println(Arrays.toString(files));
+        }
+    }
+
+    @Test
+    void webRead() throws IOException {
+        String mapInfoUrl = "http://127.0.0.1:8887/user_dir/Assmble/0f1c4840-8335-4602-9d07-825c9acd787f/result/contig.mapinfo";
+//        String mapInfoUrl = "../../bioRepository/user_dir/Assmble/0f1c4840-8335-4602-9d07-825c9acd787f/result/contig.mapinfo";
+        System.out.println("----> commonService：draftReadMapInfo");
+        System.out.println("mapInfoUrl:" + mapInfoUrl);
+        Vector<DraftMapInfo> draftMapInfos = new Vector<>();
         BufferedReader reader;
-        candidateUrl = transPath + candidateUrl;
-        System.out.println("-----> candidateUrl : " + candidateUrl);
-        reader = new BufferedReader(new FileReader(candidateUrl));
+        reader = new BufferedReader(new FileReader(mapInfoUrl));
         String line = reader.readLine();
-        // 如果没有读到结尾
         while (line != null) {
-            // 过滤掉头部的信息
-            if (!line.startsWith("#")) {
-                // 如果该行是主行
-                if (!line.startsWith("\t")) {
-                    // 创建主行对象 设置各个属性
-                    CentroCandidate centroCandidate = new CentroCandidate();
-                    System.out.println("mainLine---》" + line);
+            // 1. 过滤掉头部的信息
+            if (!line.contains("#")) {
+                DraftMapInfo draftMapInfo = new DraftMapInfo();
+                String[] split = line.split("\t");
+                for (int i = 0; i < split.length; i++) {
+                    switch (i) {
+                        case 0:
+                            draftMapInfo.setContigID(split[i]);
+                            break;
+                        case 1:
+                            draftMapInfo.setContigLength(split[i]);
+                            break;
+                        case 2:
+                            draftMapInfo.setTargetID(split[i]);
+                            break;
+                    }
+                }
+                draftMapInfos.add(draftMapInfo);
+            }
+            line = reader.readLine();
+        }
+        reader.close();
+        for (DraftMapInfo draftMapInfo : draftMapInfos) {
+            System.out.println(draftMapInfo);
+        }
+
+    }
+
+
+    // 测试 🆗！：
+    // 1. 测试脚本相对路径 2. 上传文件相对脚本的路径
+    // 如果能成功运行脚本，并且复制上传的文件到指定目录，则说明正确
+    @Test
+    void trainTest() {
+        String taskID = "Assemble/0f1c4840-8335-4602-9d07-825c9acd787f";
+        String assembleGenome = "../../bioRepository/user_dir/" + taskID + "/upload/" + "genome.fasta";
+        String hifiGenome = "../../bioRepository/user_dir/" + taskID + "/upload/" + "hifi.fasta";
+        // 脚本位置是相对项目来说的
+        String exePath = "../../bioRepository/simulatedExec/test.py";
+        String cmd = "python " + exePath + " " +
+                "-r=" + assembleGenome + " " +
+                "-q=" + hifiGenome;
+
+        File testFile = new File(exePath);
+        System.out.println(testFile.exists());
+        File aFile = new File(assembleGenome);
+        System.out.println(aFile.exists());
+        File hFile = new File(hifiGenome);
+        System.out.println(hFile.exists());
+
+        System.out.println(cmd);
+
+        System.out.println("=========TrainService -> train 通用调用进程执行命令===========");
+        // 1. 创建进程对象
+        Process process;
+        // 2. 存储命令行打印的读取结果
+        Vector<String> execResult = new Vector<>();
+        try {
+            // 3. 使用Runtime.getRuntime()创建一个本地进程
+            process = Runtime.getRuntime().exec(cmd);
+            // 5. 定义脚本的输出
+            String result = null;
+            // 6. cmd返回流 BufferedInputStream：字节缓冲流， 需要提供process返回连接到子进程正常输出的输入流
+            BufferedInputStream in = new BufferedInputStream(process.getInputStream());
+            // 7. 字符流转换字节流 BufferedReader：从字符输入流中读取文本，缓冲字符； InputStreamReader:从字节流到字符流的桥梁
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            // 【注意】如果你要输出中文字符，在这里需要给字符输入流加一个指定charset字符集，我这里把注释掉了，你可以自己选择
+            //  BufferedReader br1 = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+            // 8. 进行读取和输出
+            String lineStr = null;
+            while ((lineStr = br.readLine()) != null) {
+                result = lineStr;
+                execResult.add(lineStr);
+            }
+            // 关闭输入流
+            br.close();
+            in.close();
+            // 4. 如有必要，使当前线程等待，直到此Process对象表示的进程终止。
+            process.waitFor();
+        } catch (Exception e) {
+            throw new BusinessException("Fail to generate the result, please check the format of your file", Code.TRAIN_ERR);
+        }
+        // 9. 输出这个String Vector
+        System.out.println("------》 打印cmd Result结果地址：");
+        for (String s : execResult) {
+            System.out.println(s);
+        }
+
+    }
+
+    @Test
+    void subString() {
+        String path = "../../bioRepository/user_dir/";
+        System.out.println(path.substring(6));
+        System.out.println(path.indexOf("bioRepository"));
+    }
+
+    @Test
+    void abc() {
+        File file = new File("../../bioRepository/user_dir/upload/");
+        System.out.println(file.exists());
+    }
+
+    // 测试，在指定的目录运行命令
+    @Test
+    void runInDir() throws IOException, InterruptedException {
+        Process process;
+        // 1. 这是相对执行目录来说的
+        // 相对脚本存储目录
+        String exePath = "../../../simulatedExec/test.py";
+        // a文件目录
+        String aFile = "../../upload/4fb38236-44d8-4065-8b08-532ab677bd5f_HiFi.fasta";
+        String bFile = "../../upload/8d179bb6-9a90-4f0f-8c21-d00f4bd49879_Genome.fasta";
+        String prefix = "myfile";
+        // 拼接指令
+        String cmd = "python" + " " +
+                exePath + " " +
+                "-a=" + aFile + " " +
+                "-b=" + bFile + " " +
+                "-p=" + prefix;
+        System.out.println("cmd:\t" + cmd);
+        // 2. 执行目录
+        String pathname = "../../bioRepository/user_dir/Assemble/simulateUUID";
+        File file = new File(pathname);
+        // 3. 运行指令
+        process = Runtime.getRuntime().exec(cmd, null, file);
+        String result = null;
+        BufferedInputStream in = new BufferedInputStream(process.getInputStream());
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        String lineStr = null;
+        while ((lineStr = br.readLine()) != null) {
+            result = lineStr;
+            System.out.println(lineStr);
+        }
+        br.close();
+        in.close();
+        process.waitFor();
+    }
+
+    @Test
+    void initTask(){
+        String taskID = "Assemble/abscass";
+        String taskDir = "../../bioRepository/user_dir/" + taskID;
+        File file = new File(taskDir);
+        if (!file.exists()) {
+            file.mkdirs();
+            System.out.println("------>建立任务目录：" + file);
+        }
+    }
+
+    @Test
+    void testReader() throws IOException {
+            // 读取得从本地读取 这里要由绝对路径转为相对路径
+            System.out.println("---> commonService：draftReadMapInfo");
+            String mapInfoUrl = "../../bioRepository/user_dir/Assemble/cf4c953b-f0ce-48c0-9408-b890bee8c715/Quartet_contig.mapinfo";
+            System.out.println("------>mapInfoUrl:" + mapInfoUrl);
+            Vector<DraftMapInfo> draftMapInfos = new Vector<>();
+            BufferedReader reader;
+            reader = new BufferedReader(new FileReader(mapInfoUrl));
+            String line = reader.readLine();
+            while (line != null) {
+                // 1. 过滤掉头部的信息
+                if (!line.contains("#")) {
+                    DraftMapInfo draftMapInfo = new DraftMapInfo();
                     String[] split = line.split("\t");
-                    // 设置主属性
                     for (int i = 0; i < split.length; i++) {
                         switch (i) {
                             case 0:
-                                centroCandidate.setChr(split[i]);
+                                draftMapInfo.setContigID(split[i]);
                                 break;
                             case 1:
-                                centroCandidate.setStart(split[i]);
+                                draftMapInfo.setContigLength(split[i]);
                                 break;
                             case 2:
-                                centroCandidate.setEnd(split[i]);
-                                break;
-                            case 3:
-                                centroCandidate.setLength(split[i]);
-                                break;
-                            case 4:
-                                centroCandidate.setTRLength(split[i]);
-                                break;
-                            case 5:
-                                centroCandidate.setTRCoverage(split[i]);
-                                break;
-                            case 6:
-                                centroCandidate.setTELength(split[i]);
-                                break;
-                            case 7:
-                                centroCandidate.setTECoverage(split[i]);
-                                break;
-                            case 8:
-                                centroCandidate.setGeneLength(split[i]);
-                                break;
-                            case 9:
-                                centroCandidate.setGeneCoverage(split[i]);
-                                break;
-                            case 10:
-                                centroCandidate.setRegionScore(split[i]);
+                                draftMapInfo.setTargetID(split[i]);
                                 break;
                         }
                     }
-                    // 构建一个子行数组Vector，存放子行对象
-                    Vector<CentroSubCan> centroSubCans = new Vector<>();
-                    // 这里开始往下继续读
-                    line = reader.readLine();
-                    while ((line != null) && line.startsWith("\t")) {
-                        System.out.println("SubLine---》" + line);
-                        // 对于每一行，创建子行对象
-                        CentroSubCan centroSubCan = new CentroSubCan();
-                        String[] splitSub = line.split("\t");
-                        // 设置子属性
-                        for (int j = 0; j < splitSub.length; j++) {
-                            switch (j) {
-                                case 1:
-                                    centroSubCan.setSubTR(splitSub[j]);
-                                    break;
-                                case 2:
-                                    centroSubCan.setPeriod(splitSub[j]);
-                                    break;
-                                case 3:
-                                    centroSubCan.setSubTRLength(splitSub[j]);
-                                    break;
-                                case 4:
-                                    centroSubCan.setSubTRCoverage(splitSub[j]);
-                                    break;
-                                case 5:
-                                    centroSubCan.setPattern(splitSub[j]);
-                                    break;
-                            }
-                        }
-                        // 把对象加到数组中
-                        centroSubCans.add(centroSubCan);
-                        // 主要是这个往下读的动作已经做了
-                        line = reader.readLine();
-                    }
-                    // 循环结束，下一行是主行 这里的line有两种可能，一种是读完了，一种是主行 但是没有利用
-                    // 把子行数组作为subInfo设置给主行对象
-                    centroCandidate.setSubInfo(centroSubCans);
-                    // 主行对象设置完毕，存放到主行数组中
-                    centroCandidates.add(centroCandidate);
+                    draftMapInfos.add(draftMapInfo);
                 }
-                // 这里结束 line已经是在下一个主行了
-                System.out.println("PastLine--->"+line);
-            }
-            line = reader.readLine();
-        }
-        reader.close();
-        // 输出一下看看是否读的正确
-//        for (CentroCandidate centroCandidate : centroCandidates) {
-//            System.out.println(centroCandidate);
-//        }
-    }
-
-    @Test
-    void centroReader2() throws IOException {
-        String candidateUrl = "simu.candidate";
-        String transPath = "E:/bioResp/result/epResult/Centro/";
-        ArrayList<CentroCandidate> centroCandidates = new ArrayList<>();
-        BufferedReader reader;
-        candidateUrl = transPath + candidateUrl;
-        System.out.println("-----> candidateUrl : " + candidateUrl);
-        reader = new BufferedReader(new FileReader(candidateUrl));
-        String line = reader.readLine();
-        // 如果没有读到结尾
-        while (line != null) {
-            if(line.startsWith("#")){
                 line = reader.readLine();
-            }else if(!line.startsWith("\t")){
-                // 创建主行对象 设置各个属性
-                CentroCandidate centroCandidate = new CentroCandidate();
-                System.out.println("mainLine---》" + line);
-                String[] split = line.split("\t");
-                // 设置主属性
-                for (int i = 0; i < split.length; i++) {
-                    switch (i) {
-                        case 0:
-                            centroCandidate.setChr(split[i]);
-                            break;
-                        case 1:
-                            centroCandidate.setStart(split[i]);
-                            break;
-                        case 2:
-                            centroCandidate.setEnd(split[i]);
-                            break;
-                        case 3:
-                            centroCandidate.setLength(split[i]);
-                            break;
-                        case 4:
-                            centroCandidate.setTRLength(split[i]);
-                            break;
-                        case 5:
-                            centroCandidate.setTRCoverage(split[i]);
-                            break;
-                        case 6:
-                            centroCandidate.setTELength(split[i]);
-                            break;
-                        case 7:
-                            centroCandidate.setTECoverage(split[i]);
-                            break;
-                        case 8:
-                            centroCandidate.setGeneLength(split[i]);
-                            break;
-                        case 9:
-                            centroCandidate.setGeneCoverage(split[i]);
-                            break;
-                        case 10:
-                            centroCandidate.setRegionScore(split[i]);
-                            break;
-                    }
-                }
-                // 构建一个子行数组Vector，存放子行对象
-                Vector<CentroSubCan> centroSubCans = new Vector<>();
-                // 这里开始往下继续读
-                line = reader.readLine();
-                while ((line != null) && line.startsWith("\t")) {
-                    System.out.println("SubLine---》" + line);
-                    // 对于每一行，创建子行对象
-                    CentroSubCan centroSubCan = new CentroSubCan();
-                    String[] splitSub = line.split("\t");
-                    // 设置子属性
-                    for (int j = 0; j < splitSub.length; j++) {
-                        switch (j) {
-                            case 1:
-                                centroSubCan.setSubTR(splitSub[j]);
-                                break;
-                            case 2:
-                                centroSubCan.setPeriod(splitSub[j]);
-                                break;
-                            case 3:
-                                centroSubCan.setSubTRLength(splitSub[j]);
-                                break;
-                            case 4:
-                                centroSubCan.setSubTRCoverage(splitSub[j]);
-                                break;
-                            case 5:
-                                centroSubCan.setPattern(splitSub[j]);
-                                break;
-                        }
-                    }
-                    // 把对象加到数组中
-                    centroSubCans.add(centroSubCan);
-                    // 主要是这个往下读的动作已经做了
-                    line = reader.readLine();
-                }
-                // 循环结束，下一行是主行 这里的line有两种可能，一种是读完了，一种是主行 但是没有利用
-                // 把子行数组作为subInfo设置给主行对象
-                centroCandidate.setSubInfo(centroSubCans);
-                // 主行对象设置完毕，存放到主行数组中
-                centroCandidates.add(centroCandidate);
             }
+            reader.close();
+        for (DraftMapInfo draftMapInfo : draftMapInfos) {
+            System.out.println(draftMapInfo);
         }
-        reader.close();
-        // 输出一下看看是否读的正确
-//        for (CentroCandidate centroCandidate : centroCandidates) {
-//            System.out.println(centroCandidate);
-//        }
     }
 
 
