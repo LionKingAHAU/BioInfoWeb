@@ -528,7 +528,7 @@ public class CommonService {
      * @Return: TeloResultUrl
      */
     public TeloResultUrl teloDisplay(HttpServletRequest request) {
-        System.out.println("--->commonService: FillDisplay......");
+        System.out.println("--->commonService: teloDisplay......");
         // 初始化TeloResultUrl
         TeloResultUrl teloResultUrl = new TeloResultUrl();
         // 从Session中获取TaskID Warnings等信息

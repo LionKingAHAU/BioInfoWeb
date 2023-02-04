@@ -24,11 +24,11 @@ server:
   port: 8080
 
 ---
-# 设置session的过期时间为240min 过了后自动销毁session
+# Session单位是秒 设置八个小时过期
 server:
   servlet:
     session:
-      timeout: 240
+      timeout: 14400
 
 ---
 

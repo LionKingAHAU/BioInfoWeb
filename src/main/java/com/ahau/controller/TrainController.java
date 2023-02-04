@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Vector;
 
 @RestController
-@RequestMapping("/blast/exec")
+@RequestMapping("/blast/exec") // quarTeT
 public class TrainController {
 
     // 调用trainService

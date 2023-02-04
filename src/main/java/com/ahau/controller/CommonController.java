@@ -369,10 +369,10 @@ public class CommonController {
         HttpSession session = request.getSession();
         String taskID = (String) session.getAttribute("TaskID"); // Assemble/uuid/
         String catalogue = taskID.split("/")[0] + "/";
-        String paramType = catalogue + "Errors";
-        Vector<ProcessError> processErrors = (Vector<ProcessError>) session.getAttribute(paramType);
-        System.out.println(processErrors);
-        return new Result(Code.TRAIN_ERR, "errors", processErrors);
+        String paramType = catalogue + "Log";
+        Vector<String> execLogs = (Vector<String>) session.getAttribute(paramType);
+        System.out.println(execLogs);
+        return new Result(Code.TRAIN_ERR, "errors", execLogs);
     }
 
 }
