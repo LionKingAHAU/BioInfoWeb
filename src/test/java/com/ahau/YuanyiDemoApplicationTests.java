@@ -2,6 +2,7 @@ package com.ahau;
 
 import com.ahau.common.Code;
 import com.ahau.domain.assemble.DraftMapInfo;
+import com.ahau.domain.assemble.DraftMapInfoResult;
 import com.ahau.domain.assemble.DraftStat;
 import com.ahau.domain.centro.CentroCandidate;
 import com.ahau.domain.centro.CentroSubCan;
@@ -502,6 +503,7 @@ class YuanyiDemoApplicationTests {
             System.out.println("---> commonService：draftReadMapInfo");
             String mapInfoUrl = "../../bioRepository/user_dir/Assemble/cf4c953b-f0ce-48c0-9408-b890bee8c715/Quartet_contig.mapinfo";
             System.out.println("------>mapInfoUrl:" + mapInfoUrl);
+            DraftMapInfoResult draftMapInfoResult = new DraftMapInfoResult();
             Vector<DraftMapInfo> draftMapInfos = new Vector<>();
             BufferedReader reader;
             reader = new BufferedReader(new FileReader(mapInfoUrl));
@@ -525,13 +527,19 @@ class YuanyiDemoApplicationTests {
                         }
                     }
                     draftMapInfos.add(draftMapInfo);
+                }else{ // # 统计信息
+                    if(line.contains("Total mapped")){
+                        draftMapInfoResult.setTotalMapped(line.split("#")[1]);
+                    }
+                    if(line.contains("Total discarded")){
+                        draftMapInfoResult.setTotalDiscarded(line.split("#")[1]);
+                    }
                 }
                 line = reader.readLine();
             }
-            reader.close();
-        for (DraftMapInfo draftMapInfo : draftMapInfos) {
-            System.out.println(draftMapInfo);
-        }
+        reader.close();
+        draftMapInfoResult.setData(draftMapInfos);
+        System.out.println(draftMapInfoResult);
     }
 
 

@@ -393,6 +393,13 @@
             max-width: 90rem;
             max-height: 90rem;
         }
+
+        /* 表格统计的字体*/
+        .statFont{
+            color: #409eff;
+            font-weight: bold;
+            font-family: "Arial", sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -585,6 +592,14 @@
                                    color:#666666">
                         Statistic Information
                     </h3>
+                    <!--统计数据-->
+                    <div class="statFont">
+                        <i class="el-icon-s-data"></i>
+                        <span>{{totalSize}}</span>
+                        <el-divider direction="vertical"></el-divider>
+                        <i class="el-icon-data-analysis"></i>
+                        <span>{{gcContent}}</span>
+                    </div>
                     <!--下载按钮-->
                     <span class="download-stat">
                         <el-button icon="el-icon-download" @click="downloadStat"></el-button>
@@ -633,6 +648,17 @@
                                    color:#666666">
                         Detail Information
                     </h3>
+                    <!--统计数据-->
+                    <div class="statFont">
+                        <i class="el-icon-s-data"></i>
+                        <span>{{gapClosed}}</span>
+                        <el-divider direction="vertical"></el-divider>
+                        <i class="el-icon-data-analysis"></i>
+                        <span>{{totalFilledLength}}</span>
+                        <el-divider direction="vertical"></el-divider>
+                        <i class="el-icon-s-flag"></i>
+                        <span>{{gapRemains}}</span>
+                    </div>
                     <!--按钮-->
                     <span class="download-stat">
                         <el-button icon="el-icon-download" @click="downloadDetail"></el-button>
@@ -737,13 +763,22 @@
                 activeBar: "2", // 导航栏激活的栏，默认为Home 话说下拉栏显示不了啊喂
                 genomePng: '../imgs/empty.jpg',
                 bigPng: '',
+                // 下载文件&表格链接
                 fastaUrl: '',
                 detailUrl: '',
                 statUrl: '',
+                // 表格数据
                 gapDetail: [],
                 gapStat: [],
-                warnings: [],
+                // detail统计信息
+                gapClosed: 5,
+                totalFilledLength: 5894,
+                gapRemains: 7,
+                // stat统计信息
+                totalSize: 598510887,
+                gcContent: 0.3541809607884376,
                 // 警告表格
+                warnings: [],
                 dialogTableVisible: false,
             }
         },
@@ -757,14 +792,17 @@
                 this.statUrl = resultUrl.statUrl;
                 this.detailUrl = resultUrl.detailUrl;
                 // 2. 展示信息
-                this.gapDetail = resultUrl.gapDetail;
-                this.gapStat = resultUrl.gapStat;
+                this.gapDetail = resultUrl.gapDetailResult.data;
+                this.gapStat = resultUrl.gapStatResult.data;
                 this.warnings = resultUrl.warnings;
-                console.log(resultUrl)
-                console.log(resultUrl.gapStat);
-                console.log(this.gapStat);
-                console.log(this.warnings)
-                // 3. Warnings的结果展示
+                // 3. 统计信息
+                this.gapClosed = resultUrl.gapDetailResult.gapClosed;
+                this.totalFilledLength = resultUrl.gapDetailResult.totalFilledLength;
+                this.gapRemains = resultUrl.gapDetailResult.gapRemains;
+
+                this.totalSize = resultUrl.gapStatResult.totalSize;
+                this.gcContent = resultUrl.gapStatResult.gcContent;
+                // 4. Warnings的结果展示
                 if (this.warnings.length !== 0) {
                     // 把正确的div取消
                     $("#withCorrect").css("display", "none");

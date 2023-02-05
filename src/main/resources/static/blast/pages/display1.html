@@ -403,6 +403,13 @@
         .login-box * {
             margin-bottom: 10px;
         }
+
+        /* 表格统计的字体*/
+        .statFont{
+            color: #409eff;
+            font-weight: bold;
+            font-family: "Arial", sans-serif;
+        }
     </style>
 </head>
 
@@ -669,18 +676,29 @@
                 <div>
                     <!--侧栏1 table1-->
                     <el-aside width="50%">
+                        <!--标题-->
                         <h3
                             style="font-family: Helvetica,sans-serif;
                                    font-size: 1.3rem;
                                    color:#666666">
                             Statistic Information
                         </h3>
+                        <!--统计数据-->
+                        <div class="statFont">
+                            <i class="el-icon-s-data"></i>
+                            <span>{{totalSize}}</span>
+                            <el-divider direction="vertical"></el-divider>
+                            <i class="el-icon-data-analysis"></i>
+                            <span>{{gcContent}}</span>
+                        </div>
+                        <!--下载按钮-->
                         <span class="download-stat">
                             <el-button
                                 icon="el-icon-download"
                                 @click="downloadDraftMapInfo">
                             </el-button>
                         </span>
+                        <!--表格-->
                         <el-table
                             :data="draftStat"
                             stripe
@@ -717,18 +735,29 @@
                     </el-aside>
                     <!--侧栏2 table2-->
                     <el-aside width="50%">
+                        <!--标题-->
                         <h3
                             style="font-family: Helvetica,sans-serif;
                             font-size: 1.3rem;
                             color:#666666">
                             Map Information
                         </h3>
+                        <!--统计数据-->
+                        <div class="statFont">
+                            <i class="el-icon-s-data"></i>
+                            <span>{{totalMapped}}</span>
+                            <el-divider direction="vertical"></el-divider>
+                            <i class="el-icon-data-analysis"></i>
+                            <span>{{totalDiscarded}}</span>
+                        </div>
+                        <!--下载按钮-->
                         <span class="download-stat">
                             <el-button
                                 icon="el-icon-download"
                                 @click="downloadDraftStat">
                             </el-button>
                         </span>
+                        <!--表格-->
                         <el-table
                             :data="draftMapInfo"
                             stripe
@@ -837,11 +866,17 @@
                 fastaUrl: '../exeFiles/quartet_centro.py',
                 agpUrl: 'http://192.168.101.8:8887/Genome.fasta',
                 // 警告信息：
-                warnings: [{wID: '1', warning: 'aaaaa'}],
+                warnings: [{wID: '1', warning: 'this is a testWarning'}],
                 // 警告表格
                 dialogTableVisible: false,
                 // 放大DIV
                 bigPng: '',
+                // stat表格的统计信息
+                totalSize: 'Total Size: 123',
+                gcContent: 'GC Content: 456',
+                // mapinfo表格的统计信息
+                totalMapped: 'Total mapped: 123 bp',
+                totalDiscarded: 'Total discarded: 456 bp',
             }
         },
         mounted() {
@@ -866,9 +901,16 @@
                 this.statUrl = resultUrl.statUrl;
                 this.fastaUrl = resultUrl.fastaUrl;
                 this.agpUrl = resultUrl.agpUrl;
-                this.draftStat = resultUrl.draftStat;
-                console.log(this.draftStat)
-                this.draftMapInfo = resultUrl.draftMapInfo;
+                console.log(resultUrl.draftStatResult);
+                // 表格数据
+                this.draftStat = resultUrl.draftStatResult.data;
+                this.draftMapInfo = resultUrl.draftMapInfoResult.data;
+                // 统计数据
+                this.totalSize = resultUrl.draftStatResult.totalSize;
+                this.gcContent = resultUrl.draftStatResult.gcContent;
+                this.totalMapped = resultUrl.draftMapInfoResult.totalMapped;
+                this.totalDiscarded = resultUrl.draftMapInfoResult.totalDiscarded;
+                // 警告信息
                 this.warnings = resultUrl.warnings;
                 // TODO 如果训练过程中存在Warnings的话
                 if (this.warnings.length!==0) {

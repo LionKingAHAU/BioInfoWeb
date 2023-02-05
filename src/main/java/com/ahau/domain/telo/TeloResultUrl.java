@@ -10,6 +10,6 @@ import java.util.Vector;
 public class TeloResultUrl {
     private String genomePng;
     private String infoUrl;
-    private ArrayList<TeloInfo> teloInfo;
+    private TeloInfoResult teloInfoResult;
     private Vector<ProcessWarning> warnings;
 }

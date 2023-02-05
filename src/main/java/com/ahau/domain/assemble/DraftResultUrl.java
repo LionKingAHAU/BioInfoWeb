@@ -19,8 +19,8 @@ public class DraftResultUrl {
     private String fastaUrl;
     private String agpUrl;
     // 两个表格的JSON内容
-    private Vector<DraftStat> draftStat;
-    private Vector<DraftMapInfo> draftMapInfo;
+    private DraftStatResult draftStatResult;
+    private DraftMapInfoResult draftMapInfoResult;
     // cmd输出的Warnings
     private Vector<ProcessWarning> warnings;
 }

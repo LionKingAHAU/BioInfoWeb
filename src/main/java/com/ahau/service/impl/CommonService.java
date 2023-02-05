@@ -4,16 +4,13 @@ import com.ahau.common.Code;
 import com.ahau.common.Result;
 import com.ahau.domain.FilenamePair;
 import com.ahau.domain.ProcessWarning;
-import com.ahau.domain.assemble.DraftMapInfo;
-import com.ahau.domain.assemble.DraftResultUrl;
-import com.ahau.domain.assemble.DraftStat;
+import com.ahau.domain.assemble.*;
 import com.ahau.domain.centro.CentroCandidate;
 import com.ahau.domain.centro.CentroResultUrl;
 import com.ahau.domain.centro.CentroSubCan;
-import com.ahau.domain.gapFill.GapDetail;
-import com.ahau.domain.gapFill.GapResultUrl;
-import com.ahau.domain.gapFill.GapStat;
+import com.ahau.domain.gapFill.*;
 import com.ahau.domain.telo.TeloInfo;
+import com.ahau.domain.telo.TeloInfoResult;
 import com.ahau.domain.telo.TeloResultUrl;
 import com.ahau.exception.BusinessException;
 import com.ahau.exception.SystemException;
@@ -218,8 +215,8 @@ public class CommonService {
                     draftResultUrl.setMapInfoUrl(fileDisplay);
                     // 读表格
                     try {
-                        Vector<DraftMapInfo> draftMapInfos = draftReadMapInfo(fileRead);
-                        draftResultUrl.setDraftMapInfo(draftMapInfos);
+                        DraftMapInfoResult draftMapInfoResult = draftReadMapInfo(fileRead);
+                        draftResultUrl.setDraftMapInfoResult(draftMapInfoResult);
                     } catch (IOException e) {
                         throw new SystemException("ReadFailed！", Code.SYSTEM_ERR);
                     }
@@ -229,8 +226,8 @@ public class CommonService {
                     draftResultUrl.setStatUrl(fileDisplay);
                     // 读表格
                     try {
-                        Vector<DraftStat> draftStats = draftReadStat(fileRead);
-                        draftResultUrl.setDraftStat(draftStats);
+                        DraftStatResult draftStatResult = draftReadStat(fileRead);
+                        draftResultUrl.setDraftStatResult(draftStatResult);
                     } catch (IOException e) {
                         throw new SystemException("ReadFailed！", Code.SYSTEM_ERR);
                     }
@@ -258,12 +255,13 @@ public class CommonService {
     /**
      * @Description: 读取mapInfo文件 然后返回一个对应格式的数组
      * @Param: String mapInfoUrl
-     * @Return: Vector<DraftMapInfo>
+     * @Return: DraftMapInfoResult
      */
-    public Vector<DraftMapInfo> draftReadMapInfo(String mapInfoUrl) throws IOException {
+    public DraftMapInfoResult draftReadMapInfo(String mapInfoUrl) throws IOException {
         // 读取得从本地读取 这里要由绝对路径转为相对路径
         System.out.println("---> commonService：draftReadMapInfo......");
         System.out.println("------>mapInfoUrl:" + mapInfoUrl);
+        DraftMapInfoResult draftMapInfoResult = new DraftMapInfoResult();
         Vector<DraftMapInfo> draftMapInfos = new Vector<>();
         BufferedReader reader;
         reader = new BufferedReader(new FileReader(mapInfoUrl));
@@ -287,25 +285,31 @@ public class CommonService {
                     }
                 }
                 draftMapInfos.add(draftMapInfo);
+            } else { // # 统计信息
+                if (line.contains("Total mapped")) {
+                    draftMapInfoResult.setTotalMapped(line.split("# ")[1]);
+                }
+                if (line.contains("Total discarded")) {
+                    draftMapInfoResult.setTotalDiscarded(line.split("# ")[1]);
+                }
             }
             line = reader.readLine();
         }
         reader.close();
-       /* for (DraftMapInfo draftMapInfo : draftMapInfos) {
-            System.out.println(draftMapInfo);
-        }*/
-        return draftMapInfos;
+        draftMapInfoResult.setData(draftMapInfos);
+        return draftMapInfoResult;
     }
 
 
     /**
      * @Description: 读取stat文件
      * @Param: String statUrl
-     * @Return: Vector<DraftStat>
+     * @Return: DraftStatResult
      */
-    public Vector<DraftStat> draftReadStat(String statUrl) throws IOException {
+    public DraftStatResult draftReadStat(String statUrl) throws IOException {
         System.out.println("---> commonService：draftReadStat......");
         Vector<DraftStat> draftStats = new Vector<>();
+        DraftStatResult draftStatResult = new DraftStatResult();
         BufferedReader reader;
         reader = new BufferedReader(new FileReader(statUrl));
         String line = reader.readLine();
@@ -335,14 +339,19 @@ public class CommonService {
                     }
                 }
                 draftStats.add(draftStat);
+            } else { // # 统计信息
+                if (line.contains("Total Size")) {
+                    draftStatResult.setTotalSize(line.split("# ")[1]);
+                }
+                if (line.contains("GC content")) {
+                    draftStatResult.setGcContent(line.split("# ")[1]);
+                }
             }
             line = reader.readLine();
         }
         reader.close();
-        /*for (DraftStat draftStat : draftStats) {
-            System.out.println(draftStat);
-        }*/
-        return draftStats;
+        draftStatResult.setData(draftStats);
+        return draftStatResult;
     }
 
 
@@ -392,8 +401,8 @@ public class CommonService {
                     gapResultUrl.setStatUrl(fileDisplay);
                     // 读表格
                     try {
-                        ArrayList<GapStat> gapStats = fillReadStat(fileRead);
-                        gapResultUrl.setGapStat(gapStats);
+                        GapStatResult gapStatResult = fillReadStat(fileRead);
+                        gapResultUrl.setGapStatResult(gapStatResult);
                     } catch (IOException e) {
                         throw new SystemException("ReadFailed！", Code.SYSTEM_ERR);
                     }
@@ -403,8 +412,8 @@ public class CommonService {
                     gapResultUrl.setDetailUrl(fileDisplay);
                     // 读表格
                     try {
-                        ArrayList<GapDetail> gapDetails = fillReadDetail(fileRead);
-                        gapResultUrl.setGapDetail(gapDetails);
+                        GapDetailResult gapDetailResult = fillReadDetail(fileRead);
+                        gapResultUrl.setGapDetailResult(gapDetailResult);
                     } catch (IOException e) {
                         throw new SystemException("ReadFailed！", Code.SYSTEM_ERR);
                     }
@@ -419,11 +428,12 @@ public class CommonService {
     /**
      * @Description: fillReadStat 读取fill module的stat数据并回显到页面中
      * @Param: StatUrl
-     * @Return: gapStat
+     * @Return: GapStatResult
      */
-    public ArrayList<GapStat> fillReadStat(String statUrl) throws IOException {
+    public GapStatResult fillReadStat(String statUrl) throws IOException {
         System.out.println("--->CommonService：fillReadStat 读取stat内容到前端......");
         System.out.println("------>mapInfoUrl:" + statUrl);
+        GapStatResult gapStatResult = new GapStatResult();
         ArrayList<GapStat> gapStats = new ArrayList<>();
         BufferedReader reader;
         reader = new BufferedReader(new FileReader(statUrl));
@@ -455,25 +465,31 @@ public class CommonService {
                     }
                 }
                 gapStats.add(gapStat);
+            } else { // # 统计信息
+                if (line.contains("Total Size")) {
+                    gapStatResult.setTotalSize(line.split("#")[1]);
+                }
+                if (line.contains("GC content")) {
+                    gapStatResult.setGcContent(line.split("#")[1]);
+                }
             }
             line = reader.readLine();
         }
         reader.close();
-       /* for (GapStat gapStat : gapStats) {
-            System.out.println(gapStat);
-        }*/
-        return gapStats;
+        gapStatResult.setData(gapStats);
+        return gapStatResult;
     }
 
 
     /**
      * @Description: fillReadDetail 读取fill模块的detail数据并返回到页面中
      * @Param: DetailUrl
-     * @Return: gapDetails
+     * @Return: GapDetailResult
      */
-    public ArrayList<GapDetail> fillReadDetail(String detailUrl) throws IOException {
+    public GapDetailResult fillReadDetail(String detailUrl) throws IOException {
         System.out.println("--->CommonService：fillReadDetail 读取detail内容到前端......");
         ArrayList<GapDetail> gapDetails = new ArrayList<>();
+        GapDetailResult gapDetailResult = new GapDetailResult();
         BufferedReader reader;
         reader = new BufferedReader(new FileReader(detailUrl));
         String line = reader.readLine();
@@ -511,14 +527,22 @@ public class CommonService {
                     }
                 }
                 gapDetails.add(gapDetail);
+            } else { // # 统计信息
+                if (line.contains("Gap Closed")) {
+                    gapDetailResult.setGapClosed(line.split("#")[1]);
+                }
+                if (line.contains("Total Filled length")) {
+                    gapDetailResult.setTotalFilledLength(line.split("#")[1]);
+                }
+                if (line.contains("Gap Remains")) {
+                    gapDetailResult.setGapRemains(line.split("#")[1]);
+                }
             }
             line = reader.readLine();
         }
         reader.close();
-        /*for (GapDetail gapDetail : gapDetails) {
-            System.out.println(gapDetail);
-        }*/
-        return gapDetails;
+        gapDetailResult.setData(gapDetails);
+        return gapDetailResult;
     }
 
 
@@ -563,8 +587,8 @@ public class CommonService {
                     teloResultUrl.setInfoUrl(fileDisplay);
                     // 读表格
                     try {
-                        ArrayList<TeloInfo> teloInfos = teloReadInfo(fileRead);
-                        teloResultUrl.setTeloInfo(teloInfos);
+                        TeloInfoResult teloInfoResult = teloReadInfo(fileRead);
+                        teloResultUrl.setTeloInfoResult(teloInfoResult);
                     } catch (IOException e) {
                         throw new SystemException("ReadFailed！", Code.SYSTEM_ERR);
                     }
@@ -578,11 +602,12 @@ public class CommonService {
     /**
      * @Description: teloInfo读取回到主页
      * @Param: String infoUrl
-     * @Return: ArrayList<TeloInfo>
+     * @Return: TeloInfoResult
      */
-    public ArrayList<TeloInfo> teloReadInfo(String infoUrl) throws IOException {
+    public TeloInfoResult teloReadInfo(String infoUrl) throws IOException {
         System.out.println("--->CommonService：teloReadDetail 读取info内容到前端......");
         ArrayList<TeloInfo> teloInfos = new ArrayList<>();
+        TeloInfoResult teloInfoResult = new TeloInfoResult();
         BufferedReader reader;
         System.out.println(infoUrl);
         reader = new BufferedReader(new FileReader(infoUrl));
@@ -618,14 +643,25 @@ public class CommonService {
                     }
                 }
                 teloInfos.add(teloInfo);
+            } else { // # 统计信息
+                if (line.contains("Telomere repeat")) {
+                    teloInfoResult.setTelomereRepeat(line.split("#")[1]);
+                }
+                if (line.contains("Both telomere")) {
+                    teloInfoResult.setBothFound(line.split("#")[1]);
+                }
+                if (line.contains("Only one")) {
+                    teloInfoResult.setOnlyOne(line.split("#")[1]);
+                }
+                if (line.contains("No telomere found")) {
+                    teloInfoResult.setNoFound(line.split("#")[1]);
+                }
             }
             line = reader.readLine();
         }
         reader.close();
-       /* for (TeloInfo teloInfo : teloInfos) {
-            System.out.println(teloInfo);
-        }*/
-        return teloInfos;
+        teloInfoResult.setData(teloInfos);
+        return teloInfoResult;
     }
 
 

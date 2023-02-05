@@ -394,6 +394,13 @@
             max-width: 90rem;
             max-height: 90rem;
         }
+
+        /* 表格统计的字体*/
+        .statFont{
+            color: #409eff;
+            font-weight: bold;
+            font-family: "Arial", sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -575,6 +582,20 @@
                 </div>
                 <!--4.3 stat-->
                 <div>
+                    <!--统计数据-->
+                    <div class="statFont">
+                        <i class="el-icon-s-data"></i>
+                        <span>{{teloRepeat}}</span>
+                        <el-divider direction="vertical"></el-divider>
+                        <i class="el-icon-data-analysis"></i>
+                        <span>{{teloBoth}}</span>
+                        <el-divider direction="vertical"></el-divider>
+                        <i class="el-icon-s-flag"></i>
+                        <span>{{teloOnlyOne}}</span>
+                        <el-divider direction="vertical"></el-divider>
+                        <i class="el-icon-collection-tag"></i>
+                        <span>{{teloNo}}</span>
+                    </div>
                     <!--下载按钮-->
                     <span class="download-stat">
                         <el-button icon="el-icon-download" @click="downloadInfo"></el-button>
@@ -675,6 +696,11 @@
                 warnings: [],
                 // 警告表格
                 dialogTableVisible: false,
+                // 统计信息
+                teloRepeat: 'abcd',
+                teloBoth: '2',
+                teloOnlyOne: '3',
+                teloNo: '1',
             }
         },
         mounted() {
@@ -686,7 +712,14 @@
                 this.genomePng = resultUrl.genomePng;
                 this.infoUrl = resultUrl.infoUrl;
                 // 2. 展示信息
-                this.teloInfo = resultUrl.teloInfo;
+                this.teloInfo = resultUrl.teloInfoResult.data;
+                // 3. 统计信息
+                let stat = resultUrl.teloInfoResult;
+                this. teloRepeat = stat.telomereRepeat;
+                this. teloBoth = stat.bothFound;
+                this. teloOnlyOne = stat.onlyOne;
+                this. teloNo = stat.noFound;
+
                 this.warnings = resultUrl.warnings;
                 // 3. Warnings的结果展示
                 if (this.warnings.length !== 0) {
@@ -729,12 +762,12 @@
                 $a.dispatchEvent(eventObj);
             },
             // 下载图片
-            downloadPng(){
+            downloadPng() {
                 let src = this.genomePng;
                 this.downloadCommon(src);
             },
             // 下载stat
-            downloadInfo(){
+            downloadInfo() {
                 let src = this.infoUrl;
                 this.downloadCommon(src);
             },
