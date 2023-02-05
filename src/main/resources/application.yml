@@ -20,15 +20,13 @@ pathConfig:
 
 
 ---
+
+# 设置端口和session过期时间
 server:
   port: 8080
-
----
-# Session单位是秒 设置八个小时过期
-server:
   servlet:
     session:
-      timeout: 14400
+      timeout: 240m
 
 ---
 
