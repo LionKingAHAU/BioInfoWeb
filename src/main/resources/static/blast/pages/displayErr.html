@@ -411,12 +411,11 @@
         }
 
         .item {
-            padding: 10px 0;
+            text-align: left;
         }
 
         .box-card {
-            width: 480px;
-            margin: auto;
+
         }
     </style>
 </head>
@@ -463,10 +462,9 @@
                 </el-empty>
                 <el-card class="box-card">
                     <div v-for="o in processLogs.length" :key="o" class="text item">
-                        {{processLogs[o]}}
+                        {{processLogs[o-1]}}
                     </div>
                 </el-card>
-
             </el-main>
         </el-container>
     </div>
@@ -506,7 +504,11 @@
         data: function () {
             return {
                 activeBar: "2", // 导航栏激活的栏，默认为Home
-                processLogs:['Quartet.Quartet.telo.info', '[Error] Unexpected error happened.', '[Error] No Alignment found.', '[Error] AAAAAAA.', 'Quartet.Quartet.telo.png'],
+                processLogs:['Quartet.Quartet.telo.info',
+                             '[Error] Unexpected error happened.',
+                             '[Error] No Alignment found.',
+                             '[Error] AAAAAAA.',
+                             'Quartet.Quartet.telo.png Quartet.Quartet.telo.png Quartet.Quartet.telo.png Quartet.Quartet.telo.png'],
             }
         },
         /*这里需要mounted读errors*/
